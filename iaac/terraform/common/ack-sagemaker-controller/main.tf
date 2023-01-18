@@ -1,7 +1,7 @@
 data "github_repository" "kubeflow-manifests" {
   full_name = "ni/kubeflow-manifests"
 }
-data "github_repository_file" "profile_controller_policy" {
+data "github_repository_file" "iam_ack_oidc_sm_studio_policy" {
   repository = data.github_repository.kubeflow-manifests.name
   branch     = "main"
   file       = "awsconfigs/infra_configs/iam_ack_oidc_sm_studio_policy.json"
@@ -9,7 +9,7 @@ data "github_repository_file" "profile_controller_policy" {
 resource "aws_iam_policy" "sagemaker_ack_controller_studio_access" {
   name_prefix = "${local.service}-ack-controller-policy"
   description = "IAM policy for the ${local.service} ack controller"
-  policy      = data.github_repository_file.profile_controller_policy.content
+  policy      = data.github_repository_file.iam_ack_oidc_sm_studio_policy.content
 }
 
 module "irsa" {
