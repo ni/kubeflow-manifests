@@ -1,6 +1,3 @@
-provider "github" {
-  owner = "ni"
-}
 data "github_repository_file" "profile_controller_policy" {
   repository = "kubeflow-manifests"
   branch     = "main"

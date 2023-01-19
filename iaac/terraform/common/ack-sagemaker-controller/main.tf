@@ -1,7 +1,3 @@
-provider "github" {
-  owner = "ni"
-}
-
 data "github_repository_file" "iam_ack_oidc_sm_studio_policy" {
   repository = "kubeflow-manifests"
   branch     = "main"
