@@ -1,5 +1,5 @@
 provider "github" {
-  owner = "ni"
+  organization = "ni"
 }
 locals {
   katib_chart_vanilla = "${var.kf_helm_repo_path}/charts/apps/katib/vanilla"
