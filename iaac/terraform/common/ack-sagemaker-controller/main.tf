@@ -1,5 +1,5 @@
 data "github_repository_file" "iam_ack_oidc_sm_studio_policy" {
-  repository = "kubeflow-manifests"
+  repository = "ni/kubeflow-manifests"
   branch     = "main"
   file       = "awsconfigs/infra_configs/iam_ack_oidc_sm_studio_policy.json"
 }

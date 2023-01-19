@@ -1,5 +1,5 @@
 data "github_repository_file" "profile_controller_policy" {
-  repository = "kubeflow-manifests"
+  repository = "ni/kubeflow-manifests"
   branch     = "main"
   file       = "awsconfigs/infra_configs/iam_profile_controller_policy.json"
 }
