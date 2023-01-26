@@ -53,7 +53,7 @@ spec:
             memory: 100Mi
           requests:
             cpu: 100m
-            memory: 100Mi
+            memory: 20Mi
         securityContext:
           allowPrivilegeEscalation: false
       serviceAccountName: training-operator
