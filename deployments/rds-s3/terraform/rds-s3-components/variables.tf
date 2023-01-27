@@ -131,7 +131,8 @@ variable "mlmdb_name" {
 
 variable "minio_service_region" {
   type        = string
-  default = nudex_config= "S3 service region. Change this field if the S3 bucket will be in a different region than the EKS cluster"
+  default = null
+  description = "S3 service region. Change this field if the S3 bucket will be in a different region than the EKS cluster"
 }
 
 variable "minio_service_host" {
