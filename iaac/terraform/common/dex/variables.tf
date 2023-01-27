@@ -19,3 +19,8 @@ variable "addon_context" {
   })
   description = "Input configuration for the addon"
 }
+
+variable "config" {
+  type        = any
+  default     = {}
+}

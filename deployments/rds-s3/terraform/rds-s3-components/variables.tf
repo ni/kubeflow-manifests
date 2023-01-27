@@ -131,8 +131,7 @@ variable "mlmdb_name" {
 
 variable "minio_service_region" {
   type        = string
-  default = null
-  description = "S3 service region. Change this field if the S3 bucket will be in a different region than the EKS cluster"
+  default = nudex_config= "S3 service region. Change this field if the S3 bucket will be in a different region than the EKS cluster"
 }
 
 variable "minio_service_host" {
@@ -184,4 +183,10 @@ variable "notebook_idleness_check_period" {
   description = "How frequently the controller should poll each Notebook to update its LAST_ACTIVITY_ANNOTATION (minutes)"
   type = string
   default = 5
+}
+
+variable "dex_config"{
+  description = "Config to merge into the Dex config file as a ConfigMap"
+  type = any
+  default = {}
 }
