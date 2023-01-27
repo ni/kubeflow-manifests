@@ -136,9 +136,7 @@ module "kubeflow_dex" {
   }
   addon_context = var.addon_context
   depends_on = [module.kubeflow_istio]
-  set_values = {
-    "config" = var.dex_config
-  }
+  config = var.dex_config
 }
 
 module "kubeflow_oidc_authservice" {
