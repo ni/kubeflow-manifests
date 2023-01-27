@@ -133,10 +133,10 @@ module "kubeflow_dex" {
   source            = "../../../../iaac/terraform/common/dex"
   helm_config = {
     chart = "${var.kf_helm_repo_path}/charts/common/dex"
+    values = yamlencode(var.dex_config)
   }
   addon_context = var.addon_context
   depends_on = [module.kubeflow_istio]
-  config = var.dex_config
 }
 
 module "kubeflow_oidc_authservice" {
