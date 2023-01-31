@@ -1,7 +1,7 @@
 apiVersion: v1
 data:
   OIDC_AUTH_URL: /dex/auth
-  OIDC_PROVIDER: http://dex.auth.svc.cluster.local:5556/dex
+  OIDC_PROVIDER: {{ .Values.oidc_provider }}
   OIDC_SCOPES: profile email groups
   PORT: '"8080"'
   REDIRECT_URL: /login/oidc

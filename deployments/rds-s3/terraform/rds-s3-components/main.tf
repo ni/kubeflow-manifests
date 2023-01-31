@@ -143,6 +143,7 @@ module "kubeflow_oidc_authservice" {
   source            = "../../../../iaac/terraform/common/oidc-authservice"
   helm_config = {
     chart = "${var.kf_helm_repo_path}/charts/common/oidc-authservice" 
+    values = [var.authservice_config]
   }
   addon_context = var.addon_context
   depends_on = [module.kubeflow_dex]

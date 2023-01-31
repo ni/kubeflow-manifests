@@ -191,3 +191,9 @@ variable "dex_config"{
   type = any
   default = {}
 }
+
+variable "authservice_config"{
+  description = "Config for the authservice ConfigMap"
+  type = any
+  default = {}
+}
