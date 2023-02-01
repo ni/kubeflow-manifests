@@ -188,12 +188,12 @@ variable "notebook_idleness_check_period" {
 
 variable "dex_config"{
   description = "Config to merge into the Dex config file as a ConfigMap"
-  type = any
-  default = {}
+  type = string
+  default = ""
 }
 
 variable "authservice_config"{
   description = "Config for the authservice ConfigMap"
-  type = any
-  default = {}
+  type = string
+  default = ""
 }
