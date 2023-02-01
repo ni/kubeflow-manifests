@@ -197,3 +197,9 @@ variable "authservice_config"{
   type = string
   default = ""
 }
+
+variable "enable_default_user"{
+  description = "Whether to create the default user@example.com profile"
+  type = bool
+  default = true
+}

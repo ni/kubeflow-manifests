@@ -191,7 +191,7 @@ module "kubeflow_istio_resources" {
     chart = "${var.kf_helm_repo_path}/charts/common/kubeflow-istio-resources"
   }  
   addon_context = var.addon_context
-  depends_on = [module.kubeflow_roles]
+  depends_on = [module.kubeflow_istio]
 }
 
 module "filter_kfp_set_values" {
@@ -347,14 +347,15 @@ module "kubeflow_aws_telemetry" {
   depends_on = [module.kubeflow_training_operator]
 }
 
-# module "kubeflow_user_namespace" {
-#   source            = "../../../../iaac/terraform/common/user-namespace"
-#   helm_config = {
-#     chart = "${var.kf_helm_repo_path}/charts/common/user-namespace"
-#   }  
-#   addon_context = var.addon_context
-#   depends_on = [module.kubeflow_aws_telemetry]
-# }
+module "kubeflow_user_namespace" {
+  count = var.enable_default_user ? 1: 0
+  source            = "../../../../iaac/terraform/common/user-namespace"
+  helm_config = {
+    chart = "${var.kf_helm_repo_path}/charts/common/user-namespace"
+  }  
+  addon_context = var.addon_context
+  depends_on = [module.kubeflow_aws_telemetry]
+}
 
 module "ack_sagemaker" {
   source            = "../../../../iaac/terraform/common/ack-sagemaker-controller"
