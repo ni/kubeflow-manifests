@@ -1,5 +1,5 @@
 data "github_repository_file" "profile_controller_policy" {
-  repository = "awslabs/kubeflow-manifests?ref=v1.6.1-aws-b1.0.0"
+  repository = "awslabs/kubeflow-manifests"
   branch     = "main"
   file       = "awsconfigs/infra_configs/iam_ack_oidc_sm_studio_policy.json"
 }
