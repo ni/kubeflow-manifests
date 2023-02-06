@@ -1,6 +1,6 @@
 data "github_repository_file" "profile_controller_policy" {
-  repository = "awslabs/kubeflow-manifests"
-  branch     = "release-v1.6.1-aws-b1.0.0"
+  repository = "ni/kubeflow-manifests"
+  branch     = "main"
   file       = "awsconfigs/infra_configs/iam_profile_controller_policy.json"
 }
 resource "aws_iam_policy" "profile_controller_policy" {
