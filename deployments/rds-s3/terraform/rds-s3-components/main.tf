@@ -133,6 +133,7 @@ module "kubeflow_dex" {
   source            = "../../../../iaac/terraform/common/dex"
   helm_config = {
     chart = "${var.kf_helm_repo_path}/charts/common/dex"
+    values = [var.dex_config]
   }
   addon_context = var.addon_context
   depends_on = [module.kubeflow_istio]
@@ -142,6 +143,7 @@ module "kubeflow_oidc_authservice" {
   source            = "../../../../iaac/terraform/common/oidc-authservice"
   helm_config = {
     chart = "${var.kf_helm_repo_path}/charts/common/oidc-authservice" 
+    values = [var.authservice_config]
   }
   addon_context = var.addon_context
   depends_on = [module.kubeflow_dex]
@@ -189,7 +191,7 @@ module "kubeflow_istio_resources" {
     chart = "${var.kf_helm_repo_path}/charts/common/kubeflow-istio-resources"
   }  
   addon_context = var.addon_context
-  depends_on = [module.kubeflow_roles]
+  depends_on = [module.kubeflow_istio]
 }
 
 module "filter_kfp_set_values" {
@@ -346,6 +348,7 @@ module "kubeflow_aws_telemetry" {
 }
 
 module "kubeflow_user_namespace" {
+  count = var.enable_default_user ? 1: 0
   source            = "../../../../iaac/terraform/common/user-namespace"
   helm_config = {
     chart = "${var.kf_helm_repo_path}/charts/common/user-namespace"

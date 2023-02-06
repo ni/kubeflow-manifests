@@ -185,3 +185,21 @@ variable "notebook_idleness_check_period" {
   type = string
   default = 5
 }
+
+variable "dex_config"{
+  description = "Config to merge into the Dex config file as a ConfigMap"
+  type = string
+  default = ""
+}
+
+variable "authservice_config"{
+  description = "Config for the authservice ConfigMap"
+  type = string
+  default = ""
+}
+
+variable "enable_default_user"{
+  description = "Whether to create the default user@example.com profile"
+  type = bool
+  default = true
+}
