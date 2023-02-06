@@ -9,7 +9,7 @@ metadata:
   name: activator-pdb
   namespace: knative-serving
 spec:
-  minAvailable: 80%
+  minAvailable: 1
   selector:
     matchLabels:
       app: activator
