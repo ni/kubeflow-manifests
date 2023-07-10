@@ -26,5 +26,11 @@ variable "cognito_user_pool_domain" {
 variable "load_balancer_scheme" {
   description = "Load Balancer Scheme"
   type        = string
-  default = "internet-facing"
+  default     = "internet-facing"
+}
+
+variable "tags" {
+  description = "Additional tags (e.g. `map('BusinessUnit`,`XYZ`)"
+  type        = map(string)
+  default     = {}
 }

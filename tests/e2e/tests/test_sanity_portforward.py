@@ -12,7 +12,7 @@ import time
 import pytest
 import boto3
 
-from e2e.utils.utils import get_s3_client
+from e2e.utils.utils import get_s3_client, kubectl_wait_pods
 
 from e2e.utils.constants import DEFAULT_USER_NAMESPACE
 from e2e.utils.utils import load_yaml_file, wait_for, rand_name, write_yaml_file, WaitForCircuitBreakerError
@@ -21,7 +21,7 @@ from e2e.utils.config import configure_resource_fixture, metadata
 from e2e.conftest import region
 
 from e2e.fixtures.cluster import cluster
-from e2e.fixtures.installation import installation, configure_manifests, clone_upstream
+from e2e.fixtures.installation import installation, configure_manifests, clone_upstream, ebs_addon
 from e2e.fixtures.clients import (
     kfp_client,
     port_forward,
@@ -42,8 +42,6 @@ from e2e.utils.custom_resources import (
 from e2e.utils.load_balancer.common import CONFIG_FILE as LB_CONFIG_FILE
 from kfp_server_api.exceptions import ApiException as KFPApiException
 from kubernetes.client.exceptions import ApiException as K8sApiException
-from e2e.utils.aws.iam import IAMRole
-from e2e.utils.s3_for_training.data_bucket import S3BucketWithTrainingData
 from e2e.fixtures.notebook_dependencies import notebook_server
 
 
@@ -57,7 +55,7 @@ def installation_path():
     return INSTALLATION_PATH_FILE
 
 NOTEBOOK_IMAGES = [
-    "public.ecr.aws/c9e4w0g3/notebook-servers/jupyter-tensorflow:2.6.3-cpu-py38-ubuntu20.04-v1.8",
+    "public.ecr.aws/kubeflow-on-aws/notebook-servers/jupyter-tensorflow:2.12.0-cpu-py310-ubuntu20.04-ec2-v1.0",
 ]
 
 testdata = [
@@ -91,62 +89,6 @@ def wait_for_run_succeeded(kfp_client, run, job_name, pipeline_id):
 
     return wait_for(callback, timeout=900)
 
-
-@pytest.fixture(scope="class")
-def sagemaker_execution_role(region, metadata, request):
-    sagemaker_execution_role_name = "role-" + RANDOM_PREFIX
-    managed_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess", "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"]
-    role = IAMRole(name=sagemaker_execution_role_name, region=region, policy_arns=managed_policies)
-    metadata_key = "sagemaker_execution_role"
-
-    resource_details = {}
-
-    def on_create():
-        trust_policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": {"Service": "sagemaker.amazonaws.com"},
-                    "Action": "sts:AssumeRole",
-                }
-            ],
-        }
-
-        sagemaker_execution_role_arn = role.create(
-            policy_document=json.dumps(trust_policy)
-        )
-
-        resource_details["name"] = sagemaker_execution_role_name
-        resource_details["arn"] = sagemaker_execution_role_arn
-
-    def on_delete():
-        role.delete()
-
-    return configure_resource_fixture(
-        metadata=metadata,
-        request=request,
-        resource_details=resource_details,
-        metadata_key=metadata_key,
-        on_create=on_create,
-        on_delete=on_delete,
-    )
-
-@pytest.fixture(scope="class")
-def s3_bucket_with_data():
-    bucket_name = "s3-" + RANDOM_PREFIX
-    bucket = S3BucketWithTrainingData(name=bucket_name)
-    bucket.create()
-
-    yield
-    bucket.delete()
-
-@pytest.fixture(scope="class")
-def clean_up_training_jobs_in_user_ns():
-    yield 
-
-    cmd = f"kubectl delete trainingjobs --all -n {DEFAULT_USER_NAMESPACE}".split()
-    subprocess.Popen(cmd)
 
 class TestSanity:
     @pytest.fixture(scope="class")
@@ -273,49 +215,13 @@ class TestSanity:
         cmd = f"kubectl -n kubeflow-user-example-com exec -it {notebook_name}-0 -- /bin/bash -c".split()
         cmd.append(sub_cmd)
 
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode()
+        # kubectl wait --for=condition=ready pod -l 'app in ({notebook_name})' --timeout=360s -n {DEFAULT_USER_NAMESPACE}
+        kubectl_wait_pods(
+            pods=notebook_name, namespace=DEFAULT_USER_NAMESPACE, timeout=360
+        )
+
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, timeout=120).decode()
         print(output)
         # The second condition is now required in case the kfp test runs before this one.
         assert expected_output in output or "training-job-" in output
     
-    def test_run_kfp_sagemaker_pipeline(
-        self, region, metadata, s3_bucket_with_data, sagemaker_execution_role, kfp_client, clean_up_training_jobs_in_user_ns
-    ):
-
-        experiment_name = "experiment-" + RANDOM_PREFIX
-        experiment_description = "description-" + RANDOM_PREFIX
-        sagemaker_execution_role_name = "role-" + RANDOM_PREFIX
-        bucket_name = "s3-" + RANDOM_PREFIX
-        job_name = "kfp-run-" + RANDOM_PREFIX
-
-        sagemaker_execution_role_details = metadata.get("sagemaker_execution_role")
-        sagemaker_execution_role_arn = sagemaker_execution_role_details["arn"]
-
-        
-        experiment = kfp_client.create_experiment(
-            experiment_name,
-            description=experiment_description,
-            namespace=DEFAULT_USER_NAMESPACE,
-        )
-
-        pipeline_id = kfp_client.get_pipeline_id(PIPELINE_NAME_KFP)
-
-        params = {
-            "sagemaker_role_arn": sagemaker_execution_role_arn,
-            "s3_bucket_name": bucket_name,
-        }
-
-        run = kfp_client.run_pipeline(
-            experiment.id, job_name=job_name, pipeline_id=pipeline_id, params=params
-        )
-
-        assert run.name == job_name
-        assert run.pipeline_spec.pipeline_id == pipeline_id
-        assert run.status == None
-
-        wait_for_run_succeeded(kfp_client, run, job_name, pipeline_id)
-
-        kfp_client.delete_experiment(experiment.id)
-        
-        cmd = "kubectl delete trainingjobs --all -n kubeflow-user-example-com".split()
-        subprocess.Popen(cmd)

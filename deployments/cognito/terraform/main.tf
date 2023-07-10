@@ -1,7 +1,7 @@
 locals {
   cluster_name = var.cluster_name
   region       = var.cluster_region
-  eks_version = var.eks_version
+  eks_version  = var.eks_version
 
   vpc_cidr = "10.0.0.0/16"
 
@@ -17,10 +17,8 @@ locals {
   azs      = slice(local.available_azs, 0, local.az_count)
 
   tags = {
-    Blueprint  = local.cluster_name
-    GithubRepo = "github.com/awslabs/kubeflow-manifests"
-    Platform = "kubeflow-on-aws"
-    KubeflowVersion = "1.6"
+    Platform        = "kubeflow-on-aws"
+    KubeflowVersion = "1.7"
   }
 
   kf_helm_repo_path = var.kf_helm_repo_path
@@ -50,7 +48,7 @@ locals {
     mg_gpu = local.managed_node_group_gpu
   }
 
-  managed_node_groups = { for k, v in local.potential_managed_node_groups : k => v if v != null}
+  managed_node_groups = { for k, v in local.potential_managed_node_groups : k => v if v != null }
 }
 
 provider "aws" {
@@ -61,7 +59,7 @@ provider "aws" {
 # https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-add-custom-domain.html
 provider "aws" {
   region = "us-east-1"
-  alias = "virginia"
+  alias  = "virginia"
 }
 
 
@@ -115,7 +113,7 @@ data "aws_ec2_instance_type_offerings" "availability_zones_gpu" {
 # EKS Blueprints
 #---------------------------------------------------------------
 module "eks_blueprints" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.12.1"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.31.0"
 
   cluster_name    = local.cluster_name
   cluster_version = local.eks_version
@@ -130,7 +128,7 @@ module "eks_blueprints" {
 }
 
 module "eks_blueprints_kubernetes_addons" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.12.1"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.31.0"
 
   eks_cluster_id       = module.eks_blueprints.eks_cluster_id
   eks_cluster_endpoint = module.eks_blueprints.eks_cluster_endpoint
@@ -138,15 +136,27 @@ module "eks_blueprints_kubernetes_addons" {
   eks_cluster_version  = module.eks_blueprints.eks_cluster_version
 
   # EKS Managed Add-ons
-  enable_amazon_eks_vpc_cni    = true
-  enable_amazon_eks_coredns    = true
-  enable_amazon_eks_kube_proxy = true
+  enable_amazon_eks_vpc_cni            = true
+  enable_amazon_eks_coredns            = true
+  enable_amazon_eks_kube_proxy         = true
   enable_amazon_eks_aws_ebs_csi_driver = true
 
   # EKS Blueprints Add-ons
-  enable_cert_manager = true
+  enable_cert_manager                 = true
   enable_aws_load_balancer_controller = true
+
+  aws_efs_csi_driver_helm_config = {
+    namespace = "kube-system"
+    version   = "2.4.1"
+  }
+
   enable_aws_efs_csi_driver = true
+
+  aws_fsx_csi_driver_helm_config = {
+    namespace = "kube-system"
+    version   = "1.5.1"
+  }
+
   enable_aws_fsx_csi_driver = true
 
   enable_nvidia_device_plugin = local.using_gpu
@@ -170,22 +180,24 @@ module "eks_blueprints_outputs" {
 module "kubeflow_components" {
   source = "./cognito-components"
 
-  kf_helm_repo_path = local.kf_helm_repo_path
-  addon_context = module.eks_blueprints_outputs.addon_context
+  kf_helm_repo_path    = local.kf_helm_repo_path
+  addon_context        = module.eks_blueprints_outputs.addon_context
   enable_aws_telemetry = var.enable_aws_telemetry
 
-  notebook_enable_culling = var.notebook_enable_culling
-  notebook_cull_idle_time = var.notebook_cull_idle_time
+  notebook_enable_culling        = var.notebook_enable_culling
+  notebook_cull_idle_time        = var.notebook_cull_idle_time
   notebook_idleness_check_period = var.notebook_idleness_check_period
 
-  aws_route53_root_zone_name = var.aws_route53_root_zone_name
+  aws_route53_root_zone_name      = var.aws_route53_root_zone_name
   aws_route53_subdomain_zone_name = var.aws_route53_subdomain_zone_name
-  create_subdomain = var.create_subdomain
-  cognito_user_pool_name = var.cognito_user_pool_name
-  load_balancer_scheme = var.load_balancer_scheme
+  create_subdomain                = var.create_subdomain
+  cognito_user_pool_name          = var.cognito_user_pool_name
+  load_balancer_scheme            = var.load_balancer_scheme
+
+  tags = local.tags
 
   providers = {
-    aws = aws
+    aws          = aws
     aws.virginia = aws.virginia
   }
 
@@ -196,7 +208,7 @@ module "kubeflow_components" {
 #---------------------------------------------------------------
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "3.14.4"
+  version = "5.0.0"
 
   name = local.cluster_name
   cidr = local.vpc_cidr

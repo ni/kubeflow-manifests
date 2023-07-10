@@ -4,6 +4,7 @@
 resource "aws_s3_bucket" "artifact_store" {
   bucket_prefix = "kf-artifact-store-"
   force_destroy = var.force_destroy_bucket
+  tags          = var.tags
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_store_encryption" {
@@ -11,18 +12,19 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_store_en
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm     = "AES256"
+      sse_algorithm = "AES256"
     }
   }
 }
 
 resource "aws_secretsmanager_secret" "s3_secret" {
-  name_prefix = "s3-secret-"
+  name_prefix             = "s3-secret-"
   recovery_window_in_days = var.secret_recovery_window_in_days
+  tags                    = var.tags
 }
 
 resource "aws_secretsmanager_secret_version" "s3_secret_version" {
-  secret_id     = aws_secretsmanager_secret.s3_secret.id
+  secret_id = aws_secretsmanager_secret.s3_secret.id
   secret_string = jsonencode({
     accesskey = var.minio_aws_access_key_id
     secretkey = var.minio_aws_secret_access_key
